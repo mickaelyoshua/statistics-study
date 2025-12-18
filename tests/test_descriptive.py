@@ -1,5 +1,5 @@
 import pytest
-from main import (
+from stats.descriptive import (
     mean,
     median,
     mode,
