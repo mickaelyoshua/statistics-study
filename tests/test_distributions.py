@@ -17,6 +17,14 @@ class TestZScore:
         # At the mean, z-score should be 0
         assert z_score(sigma=10, mu=50, x=50) == 0.0
 
+    def test_z_score_zero_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            z_score(sigma=0, mu=50, x=50)
+
+    def test_z_score_negative_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            z_score(sigma=-10, mu=50, x=50)
+
     def test_z_score_one_std_above(self):
         # One std deviation above mean -> z = 1
         assert z_score(sigma=10, mu=50, x=60) == 1.0
@@ -36,6 +44,14 @@ class TestZScore:
 class TestGetXFromZScore:
     def test_z_zero_returns_mean(self):
         assert get_x_from_z_score(sigma=10, mu=50, z=0) == 50
+
+    def test_get_x_zero_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            get_x_from_z_score(sigma=0, mu=50, z=1)
+
+    def test_get_x_negative_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            get_x_from_z_score(sigma=-10, mu=50, z=1)
 
     def test_z_one_returns_mean_plus_sigma(self):
         assert get_x_from_z_score(sigma=10, mu=50, z=1) == 60
@@ -60,6 +76,14 @@ class TestDensityNormalDistribution:
         expected = 1 / math.sqrt(2 * math.pi)
         result = density_normal_distribution(sigma=1, mu=0, x=0)
         assert result == pytest.approx(expected)
+
+    def test_pdf_zero_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            density_normal_distribution(sigma=0, mu=0, x=0)
+
+    def test_pdf_negative_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            density_normal_distribution(sigma=-1, mu=0, x=0)
 
     def test_pdf_symmetric_around_mean(self):
         # PDF should be symmetric: f(mu + a) == f(mu - a)
@@ -120,6 +144,14 @@ class TestNormalCDF:
     def test_cdf_at_mean(self):
         # P(X <= mu) = 0.5
         assert normal_cdf(sigma=10, mu=50, x=50) == pytest.approx(0.5)
+
+    def test_cdf_zero_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            normal_cdf(sigma=0, mu=50, x=50)
+
+    def test_cdf_negative_sigma_raises(self):
+        with pytest.raises(ValueError, match="sigma must be positive"):
+            normal_cdf(sigma=-10, mu=50, x=50)
 
     def test_cdf_one_std_above(self):
         # P(X <= mu + sigma) ≈ 0.8413
