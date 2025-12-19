@@ -65,6 +65,8 @@ def sample_variance(arr: Sequence[int | float]) -> float:
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate variance from empty list.")
+    if n < 2:
+        raise ValueError("Sample variance requires at least 2 values.")
 
     m = mean(arr)
     mean_centering = sum([(v - m) ** 2 for v in arr])
@@ -75,6 +77,8 @@ def sample_std(arr: Sequence[int | float]) -> float:
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate standard deviation from empty list.")
+    if n < 2:
+        raise ValueError("Sample standard deviation requires at least 2 values.")
 
     return sample_variance(arr) ** (1 / 2)
 
@@ -84,11 +88,15 @@ def skewness(arr: Sequence[int | float]) -> float:
     if n == 0:
         raise ValueError("Can not calculate Skewness from empty list.")
 
+    s = std(arr)
+    if s == 0:
+        raise ValueError("Can not calculate Skewness when all values are identical.")
+
     m = mean(arr)
     # The powr of 3 to make outcast more significant and can have negative values
     mean_centering = sum([(v - m) ** 3 for v in arr])
 
-    return (mean_centering / n) / (std(arr) ** 3)
+    return (mean_centering / n) / (s ** 3)
     # if result is > 0 then is positive skew (right-skewed)
     # if result is < 0 then is negative skew (left-skewed)
 
@@ -104,6 +112,8 @@ def iqr(arr: Sequence[int | float]) -> float:
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate IQR from empty list.")
+    if n < 2:
+        raise ValueError("IQR requires at least 2 values.")
 
     sorted_arr = sorted(arr)
 
@@ -130,10 +140,14 @@ def standardized_statistical_moment(arr: Sequence[int | float], moment: int) -> 
     if moment == 2:
         return 1.0
 
+    s = std(arr)
+    if s == 0:
+        raise ValueError("Can not calculate Statistical Moment when all values are identical.")
+
     m = mean(arr)
     mean_centering = sum([(v - m) ** moment for v in arr])
 
-    return (mean_centering / n) / (std(arr) ** moment)
+    return (mean_centering / n) / (s ** moment)
 
 
 if __name__ == "__main__":

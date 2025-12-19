@@ -138,6 +138,10 @@ class TestSampleVariance:
         with pytest.raises(ValueError, match="empty list"):
             sample_variance([])
 
+    def test_sample_variance_single_element_raises(self):
+        with pytest.raises(ValueError, match="at least 2 values"):
+            sample_variance([5])
+
 
 class TestSampleStd:
     def test_sample_std_basic(self):
@@ -148,6 +152,10 @@ class TestSampleStd:
     def test_sample_std_empty_raises(self):
         with pytest.raises(ValueError, match="empty list"):
             sample_std([])
+
+    def test_sample_std_single_element_raises(self):
+        with pytest.raises(ValueError, match="at least 2 values"):
+            sample_std([5])
 
 
 class TestSkewness:
@@ -172,6 +180,10 @@ class TestSkewness:
     def test_skewness_empty_raises(self):
         with pytest.raises(ValueError, match="empty list"):
             skewness([])
+
+    def test_skewness_identical_values_raises(self):
+        with pytest.raises(ValueError, match="all values are identical"):
+            skewness([5, 5, 5, 5])
 
 
 class TestRange:
@@ -216,6 +228,10 @@ class TestIQR:
         with pytest.raises(ValueError, match="empty list"):
             iqr([])
 
+    def test_iqr_single_element_raises(self):
+        with pytest.raises(ValueError, match="at least 2 values"):
+            iqr([5])
+
 
 # ============ STANDARDIZED MOMENTS ============
 
@@ -247,6 +263,11 @@ class TestStandardizedMoment:
     def test_moment_empty_raises(self):
         with pytest.raises(ValueError, match="empty list"):
             standardized_statistical_moment([], 2)
+
+    def test_moment_identical_values_raises(self):
+        # Only raises for moment > 2 (moments 0, 1, 2 return fixed values)
+        with pytest.raises(ValueError, match="all values are identical"):
+            standardized_statistical_moment([5, 5, 5], 3)
 
 
 # ============ PARAMETRIZED TESTS ============
