@@ -1,3 +1,18 @@
+"""Descriptive statistics: measures of central tendency and dispersion.
+
+Central Tendencies:
+    mean: Arithmetic average
+    median: Middle value when sorted
+    mode: Most frequent value(s)
+
+Dispersion:
+    variance/std: Population measures (divide by n)
+    sample_variance/sample_std: Sample measures (divide by n-1, Bessel's correction)
+    skewness: Asymmetry of distribution (>0 right-skewed, <0 left-skewed)
+    arr_range: Difference between max and min
+    iqr: Interquartile range (Q3 - Q1)
+    standardized_statistical_moment: Generalized moment calculation
+"""
 from collections import Counter
 from collections.abc import Sequence
 
@@ -5,6 +20,7 @@ from collections.abc import Sequence
 
 
 def mean(arr: Sequence[int | float]) -> float:
+    """Calculate arithmetic mean (average) of values."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate mean from empty list.")
@@ -12,6 +28,7 @@ def mean(arr: Sequence[int | float]) -> float:
 
 
 def median(arr: Sequence[int | float]) -> float:
+    """Calculate median (middle value when sorted). Averages two middle values if n is even."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate median from empty list.")
@@ -27,6 +44,7 @@ def median(arr: Sequence[int | float]) -> float:
 
 
 def mode(arr: Sequence[int | float]) -> list[int | float]:
+    """Find mode(s) - most frequent value(s). Returns list since multiple modes possible."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate mode from empty list.")
@@ -44,6 +62,7 @@ def mode(arr: Sequence[int | float]) -> list[int | float]:
 
 
 def variance(arr: Sequence[int | float]) -> float:
+    """Calculate population variance. Sum of squared deviations divided by n."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate variance from empty list.")
@@ -54,6 +73,7 @@ def variance(arr: Sequence[int | float]) -> float:
 
 
 def std(arr: Sequence[int | float]) -> float:
+    """Calculate population standard deviation. Square root of variance."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate standard deviation from empty list.")
@@ -62,6 +82,7 @@ def std(arr: Sequence[int | float]) -> float:
 
 
 def sample_variance(arr: Sequence[int | float]) -> float:
+    """Calculate sample variance using Bessel's correction (n-1 denominator)."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate variance from empty list.")
@@ -70,10 +91,11 @@ def sample_variance(arr: Sequence[int | float]) -> float:
 
     m = mean(arr)
     mean_centering = sum([(v - m) ** 2 for v in arr])
-    return mean_centering / (n - 1)  # difference from variance is this n - 1
+    return mean_centering / (n - 1)
 
 
 def sample_std(arr: Sequence[int | float]) -> float:
+    """Calculate sample standard deviation. Square root of sample variance."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate standard deviation from empty list.")
@@ -84,6 +106,13 @@ def sample_std(arr: Sequence[int | float]) -> float:
 
 
 def skewness(arr: Sequence[int | float]) -> float:
+    """Calculate skewness (3rd standardized moment). Measures distribution asymmetry.
+
+    Returns:
+        >0: Right-skewed (tail extends right)
+        <0: Left-skewed (tail extends left)
+        ~0: Symmetric
+    """
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate Skewness from empty list.")
@@ -93,15 +122,13 @@ def skewness(arr: Sequence[int | float]) -> float:
         raise ValueError("Can not calculate Skewness when all values are identical.")
 
     m = mean(arr)
-    # The powr of 3 to make outcast more significant and can have negative values
     mean_centering = sum([(v - m) ** 3 for v in arr])
 
     return (mean_centering / n) / (s ** 3)
-    # if result is > 0 then is positive skew (right-skewed)
-    # if result is < 0 then is negative skew (left-skewed)
 
 
 def arr_range(arr: Sequence[int | float]) -> float:
+    """Calculate range: max - min."""
     if len(arr) == 0:
         raise ValueError("Can not calculate Range from empty list.")
 
@@ -109,6 +136,7 @@ def arr_range(arr: Sequence[int | float]) -> float:
 
 
 def iqr(arr: Sequence[int | float]) -> float:
+    """Calculate interquartile range (Q3 - Q1). Measures spread of middle 50% of data."""
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate IQR from empty list.")
@@ -120,11 +148,16 @@ def iqr(arr: Sequence[int | float]) -> float:
     if n % 2 == 0:
         return median(sorted_arr[n // 2 :]) - median(sorted_arr[: n // 2])
     else:
-        i = n // 2  # floor division
+        i = n // 2
         return median(sorted_arr[(i + 1) :]) - median(sorted_arr[:i])
 
 
 def standardized_statistical_moment(arr: Sequence[int | float], moment: int) -> float:
+    """Calculate standardized moment of given order.
+
+    Moments 0, 1, 2 always return 1, 0, 1 respectively.
+    Moment 3 = skewness, Moment 4 = kurtosis.
+    """
     n = len(arr)
     if n == 0:
         raise ValueError("Can not calculate Statistical Moment from empty list.")

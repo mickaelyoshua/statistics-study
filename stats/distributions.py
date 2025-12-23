@@ -1,3 +1,12 @@
+"""Normal distribution functions: PDF, CDF, and z-score transformations.
+
+Functions:
+    density_normal_distribution: PDF - probability density at a point
+    z_score: Convert value to standard deviations from mean
+    get_x_from_z_score: Convert z-score back to original value
+    standard_normal_cdf: CDF for standard normal (mu=0, sigma=1)
+    normal_cdf: CDF for any normal distribution
+"""
 import math
 
 
