@@ -35,6 +35,12 @@ Since this is a learning repository, the typical workflow involves:
 4. Only fixing code when explicitly requested
 5. Referencing formulas from the cheat sheet when discussing statistical concepts
 
+## Documentation
+
+- Always update docstrings when modifying functions
+- Keep documentation concise but clear
+- Include module-level docstrings describing purpose and contents
+
 ## Commit Guidelines
 
 - **Style**: Short, lowercase commit messages (e.g., `add variance and std functions`)
