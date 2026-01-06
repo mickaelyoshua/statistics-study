@@ -439,3 +439,19 @@ if __name__ == "__main__":
     print(f"P(X=12) when λ=14: {poisson_pmf(12, 14):.4f}")
     print(f"P(X≤12) when λ=14: {poisson_cdf(12, 14):.4f}")
     print(f"P(X>12) when λ=14: {1 - poisson_cdf(12, 14):.4f}")
+    print()
+
+    # Central Limit Theorem demonstration
+    print("=== Central Limit Theorem Demo ===")
+    print("Generating 1000 samples of 30 coin tosses each...")
+    print()
+
+    means = get_sample_means(1000, 30, coin_toss)
+
+    print(f"Sample means range: [{min(means):.3f}, {max(means):.3f}]")
+    print(f"Mean of sample means: {sum(means)/len(means):.4f}")
+    print("(Expected: 0, since coin toss is +1/-1)")
+    print()
+
+    print("Histogram of sample means:")
+    print_histogram(means)
