@@ -257,7 +257,7 @@ class TestStandardizedMoment:
 
     def test_moment_negative_raises(self):
         arr = [1, 2, 3]
-        with pytest.raises(ValueError, match="less then 0"):
+        with pytest.raises(ValueError, match="less than 0"):
             standardized_statistical_moment(arr, -1)
 
     def test_moment_empty_raises(self):
