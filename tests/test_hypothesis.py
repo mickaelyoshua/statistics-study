@@ -10,6 +10,11 @@ from stats.hypothesis import (
     p_value_from_z,
     is_significant,
     probability_within_n_std,
+    t_cdf,
+    t_critical,
+    t_test_statistic,
+    p_value_from_t,
+    confidence_interval_t,
 )
 
 
@@ -243,3 +248,156 @@ def test_z_critical_parametrized(confidence, expected_z):
 )
 def test_p_value_parametrized(z, alternative, expected_p):
     assert p_value_from_z(z, alternative) == pytest.approx(expected_p, abs=0.001)
+
+
+# ============ T-DISTRIBUTION ============
+
+
+class TestTCdf:
+    def test_t_cdf_zero(self):
+        # t=0 always gives 0.5 (symmetric around 0)
+        assert t_cdf(0, 10) == pytest.approx(0.5)
+
+    def test_t_cdf_positive(self):
+        # Known value: t=2.228, df=10 → 0.975
+        assert t_cdf(2.228, 10) == pytest.approx(0.975, abs=0.001)
+
+    def test_t_cdf_negative(self):
+        # Symmetric: t_cdf(-t, df) = 1 - t_cdf(t, df)
+        assert t_cdf(-2.228, 10) == pytest.approx(0.025, abs=0.001)
+
+    def test_t_cdf_invalid_df_raises(self):
+        with pytest.raises(ValueError, match="positive integer"):
+            t_cdf(1.0, 0)
+
+
+class TestTCritical:
+    def test_t_critical_df5_95(self):
+        # t-table: df=5, 95% → 2.571
+        assert t_critical(5, 0.95) == pytest.approx(2.571, abs=0.01)
+
+    def test_t_critical_df10_95(self):
+        # t-table: df=10, 95% → 2.228
+        assert t_critical(10, 0.95) == pytest.approx(2.228, abs=0.01)
+
+    def test_t_critical_df30_95(self):
+        # t-table: df=30, 95% → 2.042
+        assert t_critical(30, 0.95) == pytest.approx(2.042, abs=0.01)
+
+    def test_t_critical_df10_99(self):
+        # t-table: df=10, 99% → 3.169
+        assert t_critical(10, 0.99) == pytest.approx(3.169, abs=0.01)
+
+    def test_t_critical_large_df_approaches_z(self):
+        # As df → ∞, t approaches z
+        t_large = t_critical(1000, 0.95)
+        z_val = 1.96
+        assert t_large == pytest.approx(z_val, abs=0.02)
+
+    def test_t_critical_invalid_confidence_raises(self):
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            t_critical(10, 1.5)
+
+
+class TestTTestStatistic:
+    def test_t_test_basic(self):
+        # t = (105 - 100) / (15 / sqrt(25)) = 5 / 3 = 1.667
+        result = t_test_statistic(x_bar=105, mu_0=100, s=15, n=25)
+        assert result == pytest.approx(1.667, abs=0.001)
+
+    def test_t_test_at_null(self):
+        # x̄ = μ₀ → t = 0
+        result = t_test_statistic(x_bar=100, mu_0=100, s=15, n=25)
+        assert result == 0.0
+
+    def test_t_test_negative(self):
+        # x̄ < μ₀ → t < 0
+        result = t_test_statistic(x_bar=95, mu_0=100, s=15, n=25)
+        assert result < 0
+
+    def test_t_test_invalid_s_raises(self):
+        with pytest.raises(ValueError, match="must be positive"):
+            t_test_statistic(x_bar=100, mu_0=100, s=0, n=25)
+
+
+class TestPValueFromT:
+    def test_p_value_two_sided(self):
+        # t=2.228, df=10 → p ≈ 0.05 (two-sided)
+        result = p_value_from_t(2.228, 10, "two-sided")
+        assert result == pytest.approx(0.05, abs=0.001)
+
+    def test_p_value_greater(self):
+        # t=2.228, df=10 → p ≈ 0.025 (one-sided)
+        result = p_value_from_t(2.228, 10, "greater")
+        assert result == pytest.approx(0.025, abs=0.001)
+
+    def test_p_value_less(self):
+        # t=-2.228, df=10 → p ≈ 0.025 (one-sided, less)
+        result = p_value_from_t(-2.228, 10, "less")
+        assert result == pytest.approx(0.025, abs=0.001)
+
+    def test_p_value_t_zero(self):
+        # t=0 → p = 1.0 (two-sided)
+        result = p_value_from_t(0, 10, "two-sided")
+        assert result == pytest.approx(1.0)
+
+    def test_p_value_invalid_alternative_raises(self):
+        with pytest.raises(ValueError, match="alternative must be one of"):
+            p_value_from_t(1.0, 10, "invalid")
+
+
+class TestConfidenceIntervalT:
+    def test_ci_t_basic(self):
+        # x̄=100, s=15, n=25, df=24, t≈2.064
+        # ME = 2.064 * (15/5) = 6.19
+        lower, upper = confidence_interval_t(x_bar=100, s=15, n=25, confidence=0.95)
+        assert lower == pytest.approx(93.81, abs=0.1)
+        assert upper == pytest.approx(106.19, abs=0.1)
+
+    def test_ci_t_symmetric(self):
+        lower, upper = confidence_interval_t(x_bar=50, s=10, n=16, confidence=0.95)
+        # Should be symmetric around mean
+        assert (upper - 50) == pytest.approx(50 - lower, abs=0.01)
+
+    def test_ci_t_99_wider(self):
+        lower_95, upper_95 = confidence_interval_t(100, 15, 25, 0.95)
+        lower_99, upper_99 = confidence_interval_t(100, 15, 25, 0.99)
+        # 99% CI should be wider
+        width_95 = upper_95 - lower_95
+        width_99 = upper_99 - lower_99
+        assert width_99 > width_95
+
+    def test_ci_t_small_n_raises(self):
+        with pytest.raises(ValueError, match="at least 2"):
+            confidence_interval_t(x_bar=100, s=15, n=1, confidence=0.95)
+
+
+# ============ PARAMETRIZED T-DISTRIBUTION TESTS ============
+
+
+@pytest.mark.parametrize(
+    "df,confidence,expected_t",
+    [
+        (5, 0.90, 2.015),
+        (5, 0.95, 2.571),
+        (10, 0.95, 2.228),
+        (10, 0.99, 3.169),
+        (30, 0.95, 2.042),
+    ],
+)
+def test_t_critical_parametrized(df, confidence, expected_t):
+    assert t_critical(df, confidence) == pytest.approx(expected_t, abs=0.01)
+
+
+@pytest.mark.parametrize(
+    "t,df,alternative,expected_p",
+    [
+        (0, 10, "two-sided", 1.0),
+        (2.228, 10, "two-sided", 0.05),
+        (2.228, 10, "greater", 0.025),
+        (-2.228, 10, "less", 0.025),
+        (3.169, 10, "two-sided", 0.01),
+    ],
+)
+def test_p_value_from_t_parametrized(t, df, alternative, expected_p):
+    assert p_value_from_t(t, df, alternative) == pytest.approx(expected_p, abs=0.002)

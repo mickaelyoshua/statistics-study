@@ -102,7 +102,70 @@ is_significant(p_value=0.03, alpha=0.05)  # True
 | Condition | Test |
 |-----------|------|
 | σ known, n ≥ 30 | Z-test |
-| σ unknown, n < 30 | T-test |
+| σ unknown OR n < 30 | T-test |
+
+## T-Distribution
+
+Student's t-distribution for inference when σ is unknown.
+
+**Key differences from Z:**
+- Heavier tails (more probability in extremes)
+- Depends on degrees of freedom (df = n - 1)
+- Approaches normal as df → ∞
+
+### t_critical
+**Formula:** Inverse of t-CDF
+**Use when:** Need critical value for CI or hypothesis test
+
+```python
+t_critical(df=10, confidence=0.95)  # 2.228
+t_critical(df=30, confidence=0.95)  # 2.042
+```
+
+**T-Critical Values Table:**
+
+| df | 90% | 95% | 99% |
+|----|-------|-------|-------|
+| 5 | 2.015 | 2.571 | 4.032 |
+| 10 | 1.812 | 2.228 | 3.169 |
+| 20 | 1.725 | 2.086 | 2.845 |
+| 30 | 1.697 | 2.042 | 2.750 |
+| ∞ | 1.645 | 1.960 | 2.576 |
+
+### t_test_statistic
+**Formula:** `t = (x̄ - μ₀) / (s / √n)`
+**Use when:** Testing mean with unknown σ
+**df:** n - 1
+
+```python
+t_test_statistic(x_bar=105, mu_0=100, s=15, n=25)  # 1.667
+```
+
+### p_value_from_t
+**Use when:** Converting t-statistic to p-value
+
+```python
+p_value_from_t(2.228, df=10, alternative="two-sided")  # 0.05
+p_value_from_t(2.228, df=10, alternative="greater")    # 0.025
+```
+
+### confidence_interval_t
+**Formula:** `x̄ ± t * (s / √n)`
+**Use when:** CI with unknown σ
+
+```python
+confidence_interval_t(x_bar=100, s=15, n=25, confidence=0.95)
+# (93.81, 106.19)
+```
+
+### t_cdf
+**Formula:** Uses regularized incomplete beta function
+**Use when:** Finding P(T ≤ t)
+
+```python
+t_cdf(0, df=10)      # 0.5
+t_cdf(2.228, df=10)  # 0.975
+```
 
 ## References
 - [Wikipedia: Type I and II Errors](https://en.wikipedia.org/wiki/Type_I_and_type_II_errors)
