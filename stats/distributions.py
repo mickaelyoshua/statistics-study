@@ -1,4 +1,4 @@
-"""Normal distribution functions: PDF, CDF, and z-score transformations.
+"""Normal distribution functions: PDF, CDF, inverse CDF, and z-score transformations.
 
 The normal (Gaussian) distribution is defined by two parameters:
 - μ (mu): Mean - center of the distribution
@@ -10,6 +10,8 @@ Functions:
     get_x_from_z_score: Convert z-score back to original value
     standard_normal_cdf: CDF for standard normal (μ=0, σ=1)
     normal_cdf: CDF for any normal distribution
+    inverse_standard_normal_cdf: Find z for given probability (quantile)
+    inverse_normal_cdf: Find x for given probability (percentile)
 
 The 68-95-99.7 rule (empirical rule):
 - ~68% of data falls within 1 standard deviation of the mean
@@ -194,6 +196,97 @@ def normal_cdf(sigma: float, mu: float, x: float) -> float:
     """
     z = z_score(sigma, mu, x)
     return standard_normal_cdf(z)
+
+
+# =============================================================================
+# Inverse CDF (Quantile Function)
+# =============================================================================
+
+
+def inverse_standard_normal_cdf(p: float) -> float:
+    """Calculate z-score for a given cumulative probability.
+
+    Also known as the quantile function or percent-point function.
+    Finds z such that P(Z ≤ z) = p.
+
+    Uses Abramowitz and Stegun rational approximation.
+
+    Args:
+        p: Cumulative probability (must be in (0, 1))
+
+    Returns:
+        Z-score corresponding to probability p
+
+    Raises:
+        ValueError: If p not in (0, 1)
+
+    Example:
+        >>> inverse_standard_normal_cdf(0.975)  # 97.5th percentile
+        1.96
+        >>> inverse_standard_normal_cdf(0.5)    # Median
+        0.0
+    """
+    if not 0 < p < 1:
+        raise ValueError("p must be between 0 and 1 (exclusive)")
+
+    # Rational approximation constants (Abramowitz and Stegun)
+    a = [0, -3.969683028665376e1, 2.209460984245205e2,
+         -2.759285104469687e2, 1.383577518672690e2,
+         -3.066479806614716e1, 2.506628277459239e0]
+    b = [0, -5.447609879822406e1, 1.615858368580409e2,
+         -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1]
+    c = [0, -7.784894002430293e-3, -3.223964580411365e-1,
+         -2.400758277161838, -2.549732539343734,
+         4.374664141464968, 2.938163982698783]
+    d = [0, 7.784695709041462e-3, 3.224671290700398e-1,
+         2.445134137142996, 3.754408661907416]
+
+    p_low = 0.02425
+    p_high = 1 - p_low
+
+    if p < p_low:
+        q = math.sqrt(-2 * math.log(p))
+        z = (((((c[1]*q + c[2])*q + c[3])*q + c[4])*q + c[5])*q + c[6]) / \
+            ((((d[1]*q + d[2])*q + d[3])*q + d[4])*q + 1)
+    elif p <= p_high:
+        q = p - 0.5
+        r = q * q
+        z = (((((a[1]*r + a[2])*r + a[3])*r + a[4])*r + a[5])*r + a[6])*q / \
+            (((((b[1]*r + b[2])*r + b[3])*r + b[4])*r + b[5])*r + 1)
+    else:
+        q = math.sqrt(-2 * math.log(1 - p))
+        z = -(((((c[1]*q + c[2])*q + c[3])*q + c[4])*q + c[5])*q + c[6]) / \
+            ((((d[1]*q + d[2])*q + d[3])*q + d[4])*q + 1)
+
+    return z
+
+
+def inverse_normal_cdf(sigma: float, mu: float, p: float) -> float:
+    """Calculate value x for a given cumulative probability.
+
+    Finds x such that P(X ≤ x) = p for normal distribution.
+    Useful for finding percentiles and confidence interval bounds.
+
+    Args:
+        sigma: Standard deviation (σ) - must be positive
+        mu: Mean (μ) of the distribution
+        p: Cumulative probability (must be in (0, 1))
+
+    Returns:
+        Value x corresponding to probability p
+
+    Raises:
+        ValueError: If sigma <= 0 or p not in (0, 1)
+
+    Example:
+        >>> inverse_normal_cdf(15, 100, 0.5)    # Median IQ
+        100.0
+        >>> inverse_normal_cdf(15, 100, 0.8413) # ~1 std above mean
+        115.0
+    """
+    _validate_sigma(sigma)
+    z = inverse_standard_normal_cdf(p)
+    return get_x_from_z_score(sigma, mu, z)
 
 
 # =============================================================================
